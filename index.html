@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#0b1e33">
+    <meta name="description" content="LINK is a confidence-guided framework for map-free LiDAR relocalization from known to unknown scenes.">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="LINK · Learning to Localize from Known to Unknown Scenes">
+    <meta property="og:description" content="Confidence-guided LiDAR relocalization under partial scene coverage.">
+    <meta property="og:url" content="https://reckozmh.github.io/LINK/">
+    <meta property="og:image" content="https://reckozmh.github.io/LINK/assets/motivation.png">
+    <title>LINK · Learning to Localize from Known to Unknown Scenes</title>
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="styles.css">
+    <script src="script.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="shell header-inner">
+        <a class="brand" href="#top" aria-label="LINK, back to top">
+          <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></span>
+          <span>LINK</span>
+        </a>
+        <nav aria-label="Main navigation">
+          <a href="#overview">Overview</a>
+          <a href="#method">Method</a>
+          <a href="#urbanunseen">UrbanUnseen</a>
+          <a href="#results">Results</a>
+          <a href="#demo">Demo</a>
+        </nav>
+        <a class="header-action" href="assets/LINK-manuscript.pdf" target="_blank" rel="noopener">Paper PDF <span aria-hidden="true">↗</span></a>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero shell" id="top" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="eyebrow"><span class="eyebrow-line"></span> Research project · LiDAR localization</p>
+          <h1 id="hero-title"><span class="hero-acronym">LINK<span class="hero-period">.</span></span><span class="hero-title-tail">Learning to Localize from<br>Known to Unknown Scenes</span></h1>
+          <p class="hero-lead">A confidence-guided framework for map-free LiDAR relocalization when a route extends beyond the scenes seen during training.</p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="#demo">Watch the Oxford demo <span aria-hidden="true">↗</span></a>
+            <a class="button button-outline" href="assets/LINK-manuscript.pdf" target="_blank" rel="noopener">Read the manuscript <span aria-hidden="true">↗</span></a>
+            <a class="button button-text" href="#method">Explore method <span aria-hidden="true">↓</span></a>
+          </div>
+        </div>
+        <div class="hero-aside" aria-label="Research focus">
+          <div class="route-line" aria-hidden="true"><span class="route-point one"></span><span class="route-point two"></span><span class="route-point three"></span></div>
+          <p>THE QUESTION</p>
+          <strong>What happens when the route leaves the training map?</strong>
+          <span>LINK keeps a globally referenced pose by deciding when to trust an absolute prediction and when to propagate from a reliable history.</span>
+          <div class="aside-coordinate">KNOWN <i></i> UNKNOWN</div>
+        </div>
+      </section>
+
+      <section class="overview-section section" id="overview" aria-labelledby="overview-title">
+        <div class="shell">
+          <div class="section-heading two-column-heading">
+            <div>
+              <p class="section-index">01 / The challenge</p>
+              <h2 id="overview-title">Training coverage ends.<br><em>The journey does not.</em></h2>
+            </div>
+            <p>Scene coordinate regression can produce accurate absolute poses on familiar routes, but its predictions may become unreliable on road segments missing from training. LINK is designed for these known-to-unknown transitions.</p>
+          </div>
+          <figure class="figure-card">
+            <button class="figure-zoom" type="button" data-zoom="assets/motivation.png" data-caption="Figure 1 · Known and unknown scenes in the NCLT partial-coverage protocol, with a trajectory comparison." aria-label="Enlarge motivation figure">↗ <span>Expand figure</span></button>
+            <img src="assets/motivation.png" alt="Two-panel aerial map: training-covered and unseen route segments at left; ground truth, LightLoc, and LINK trajectories at right. LINK follows the ground-truth route more closely than LightLoc on the shown unknown segment." width="1268" height="491" fetchpriority="high">
+            <figcaption><span>FIG 01</span> On a partially known NCLT route, direct localization can jump away from ground truth in unseen regions. LINK retains better trajectory consistency in the illustrated example.</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="method-section section" id="method" aria-labelledby="method-title">
+        <div class="shell">
+          <div class="section-heading centered-heading">
+            <p class="section-index">02 / The method</p>
+            <h2 id="method-title">Trust the pose <em>when it earns trust.</em></h2>
+            <p>LINK combines an absolute scene-coordinate-regression hypothesis, temporal reliability estimation, and a learned policy for choosing the localization mode.</p>
+          </div>
+          <div class="method-steps" aria-label="LINK processing stages">
+            <div class="method-step"><span>01</span><h3>Predict</h3><p>An SCR backbone produces an absolute pose hypothesis and scene features from each LiDAR scan.</p></div>
+            <div class="method-step"><span>02</span><h3>Assess</h3><p>Temporal pose and feature consistency yield a soft reliability score for the current hypothesis.</p></div>
+            <div class="method-step"><span>03</span><h3>Decide</h3><p>A policy chooses direct localization or odometric propagation from a reliable historical pose.</p></div>
+          </div>
+          <figure class="figure-card framework-card">
+            <button class="figure-zoom" type="button" data-zoom="assets/framework.png" data-caption="Figure 2 · The LINK framework. The reward and PPO branches are used during policy training." aria-label="Enlarge framework figure">↗ <span>Expand figure</span></button>
+            <img src="assets/framework.png" alt="LINK framework diagram: LiDAR point cloud enters an SCR module; pose and features feed confidence estimation; the resulting score and pose enter a decision module that outputs a global pose. PPO and reward are training-only components." width="1454" height="583" loading="lazy">
+            <figcaption><span>FIG 02</span> The framework uses an SCR pose when reliable, or propagates a stored reliable pose through relative odometry. The PPO and reward branches are used only for policy training.</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="dataset-section section" id="urbanunseen" aria-labelledby="dataset-title">
+        <div class="shell dataset-grid">
+          <div class="dataset-copy">
+            <p class="section-index">03 / The benchmark</p>
+            <h2 id="dataset-title">Meet <em>UrbanUnseen.</em></h2>
+            <p>A city-scale LiDAR relocalization benchmark with natural route-level transitions between known and unknown scenes, complementing controlled partial-coverage protocols on Oxford and NCLT.</p>
+            <div class="dataset-facts">
+              <div><strong>~23 km²</strong><span>urban coverage</span></div>
+              <div><strong>7</strong><span>trajectories</span></div>
+              <div><strong>2</strong><span>partially known test routes</span></div>
+            </div>
+            <p class="dataset-note">Routes 10-23 and 10-24 are each about 15 km long and contain approximately 50% unknown scenes, as described in the manuscript.</p>
+          </div>
+          <figure class="figure-card dataset-figure">
+            <button class="figure-zoom" type="button" data-zoom="assets/urbanunseen.png" data-caption="Figure 3 · The UrbanUnseen acquisition platform and route-level known/unknown scene splits." aria-label="Enlarge UrbanUnseen figure">↗ <span>Expand figure</span></button>
+            <img src="assets/urbanunseen.png" alt="UrbanUnseen figure showing the vehicle and sensor rig on the left, plus satellite maps of full-coverage and partially known routes on the right. Blue indicates known scene segments and red indicates unknown segments." width="1480" height="712" loading="lazy">
+            <figcaption><span>FIG 03</span> The acquisition platform and the known/unknown route distributions of UrbanUnseen.</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="results-section section" id="results" aria-labelledby="results-title">
+        <div class="shell">
+          <div class="section-heading two-column-heading results-heading">
+            <div>
+              <p class="section-index">04 / Quantitative evidence</p>
+              <h2 id="results-title">Robustness beyond<br><em>familiar roads.</em></h2>
+            </div>
+            <p>Lower translation error is better. The figures below compare LINK with LightLoc + factor-graph optimization in the manuscript’s partially known protocols.</p>
+          </div>
+          <div class="results-table-wrap">
+            <table>
+              <caption>Translation error in meters for partially known scene protocols</caption>
+              <thead><tr><th scope="col">Protocol</th><th scope="col">Known training support</th><th scope="col">LightLoc + FG</th><th scope="col">LINK</th></tr></thead>
+              <tbody>
+                <tr><th scope="row">Oxford · random</th><td>20.0%</td><td>6.94 m</td><td class="result-link">2.24 m</td></tr>
+                <tr><th scope="row">NCLT · random</th><td>25.7%</td><td>4.29 m</td><td class="result-link">2.39 m</td></tr>
+                <tr><th scope="row">UrbanUnseen · 10-23</th><td>~50%</td><td>10.43 m</td><td class="result-link">7.24 m</td></tr>
+                <tr><th scope="row">UrbanUnseen · 10-24</th><td>~50%</td><td>9.58 m</td><td class="result-link">7.52 m</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="results-note">Oxford and NCLT values are sequence averages from manuscript Tables 1–2; UrbanUnseen values are route results from Table 3. “+ FG” denotes a baseline enhanced with odometry and factor-graph optimization.</p>
+        </div>
+      </section>
+
+      <section class="demo-section section" id="demo" aria-labelledby="demo-title">
+        <div class="shell">
+          <div class="section-heading two-column-heading demo-heading">
+            <div><p class="section-index">05 / In motion</p><h2 id="demo-title">Oxford, <em>frame by frame.</em></h2></div>
+            <p>Watch the supplied Oxford trajectory demonstration. The LINK localization track stays close to the ground-truth route in the shown sequence.</p>
+          </div>
+          <div class="video-frame">
+            <video controls playsinline preload="metadata" aria-label="LINK Oxford trajectory demonstration">
+              <source src="assets/oxford-demo.mp4" type="video/mp4">
+              Your browser does not support HTML5 video. <a href="assets/oxford-demo.mp4">Download the Oxford demo</a> instead.
+            </video>
+          </div>
+          <p class="video-caption"><span>DEMO 01</span> Oxford trajectory animation supplied with the project materials. Playback is available directly in the browser.</p>
+        </div>
+      </section>
+
+      <section class="share-section section" id="share" aria-labelledby="share-title">
+        <div class="shell share-grid">
+          <div>
+            <p class="section-index">06 / Stay connected</p>
+            <h2 id="share-title">Take LINK <em>with you.</em></h2>
+            <p>Scan the QR code or copy the project link to revisit the method, figures, and Oxford demonstration.</p>
+            <div class="share-actions">
+              <button class="button button-primary" type="button" id="copy-link">Copy project link <span aria-hidden="true">↗</span></button>
+              <a class="button button-outline" href="assets/LINK-manuscript.pdf" target="_blank" rel="noopener">Paper PDF <span aria-hidden="true">↗</span></a>
+              <a class="button button-text" href="assets/link-qr.png" download="LINK-project-QR.png">Download QR code <span aria-hidden="true">↓</span></a>
+            </div>
+            <p class="availability">The supplied manuscript is available as a PDF. Implementation and dataset downloads have not been released.</p>
+          </div>
+          <a class="qr-card" href="https://reckozmh.github.io/LINK/" aria-label="Open LINK project page">
+            <img src="assets/link-qr.png" alt="QR code linking to https://reckozmh.github.io/LINK/" width="656" height="656" loading="lazy">
+            <span>reckozmh.github.io/LINK/</span>
+          </a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer"><div class="shell footer-inner"><span class="footer-brand">LINK<span>.</span></span><span>Learning to Localize from Known to Unknown Scenes</span><a href="#top">Back to top ↑</a></div></footer>
+
+    <dialog id="figure-dialog" aria-label="Expanded research figure">
+      <button class="dialog-close" type="button" aria-label="Close enlarged figure">×</button>
+      <img alt="">
+      <p></p>
+    </dialog>
+  </body>
+</html>

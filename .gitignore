@@ -1,0 +1,8 @@
+# Keep original research materials local; the optimized public copies are in assets/.
+FIG/
+Paper/
+Video/
+
+# Local preview and editor state.
+.vscode/
+__pycache__/
